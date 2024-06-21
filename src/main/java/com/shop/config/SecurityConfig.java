@@ -23,6 +23,7 @@ public class SecurityConfig {
         http.authorizeRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**","/img/**","/favicon.ico","/error").permitAll()
                 .requestMatchers("/","/members/**","/item/**","/images/**").permitAll()
+                .requestMatchers("/order/**").authenticated() // 주문 경로에 대한 접근 권한 설정
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
         ).formLogin(formLogin -> formLogin
