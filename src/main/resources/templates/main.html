@@ -2,16 +2,21 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/layout1}">
-<!-- 사용자 CSS 추가 -->
+<!-- Thymeleaf와 레이아웃 네임스페이스 선언 -->
 
+<!-- 사용자 CSS 추가 -->
+<!-- 사용자 정의 CSS를 추가하는 블록 -->
 <th:block layout:fragment="css">
     <style>
+        /* 캐러셀 아이템 높이 설정 */
         .carousel-inner > .item {
             height: 350px;
         }
+        /* 여백 설정 */
         .margin {
             margin-bottom: 30px;
         }
+        /* 배너 설정 */
         .banner {
             height: 300px;
             position: absolute;
@@ -20,26 +25,32 @@
             width: 100%;
             height: 100%;
         }
+        /* 카드 텍스트 설정 */
         .card-text {
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
         }
+        /* 링크에 마우스를 올렸을 때 밑줄 제거 */
         a:hover {
             text-decoration: none;
         }
+        /* 텍스트 가운데 정렬 */
         .center {
             text-align: center;
         }
+        /* 커스텀 네비게이션 바 설정 (스타벅스 녹색) */
         .navbar-custom {
-            background-color: #00704A; /* 스타벅스의 녹색 */
+            background-color: #00704A;
         }
+        /* 네비게이션 바 브랜드 및 링크 색상 설정 */
         .navbar-custom .navbar-brand,
         .navbar-custom .nav-link {
             color: white;
         }
+        /* 네비게이션 바 링크에 마우스를 올렸을 때 색상 변경 (황금색 강조 효과) */
         .navbar-custom .nav-link:hover {
-            color: #FFD700; /* 황금색으로 강조 효과 */
+            color: #FFD700;
         }
     </style>
 </th:block>
@@ -65,8 +76,10 @@
     </div>
 </nav>
 
+<!-- 메인 콘텐츠 영역 -->
 <div layout:fragment="content">
 
+    <!-- 캐러셀 (이미지 슬라이드 쇼) 설정 -->
     <div id="carouselControls" class="carousel slide margin" data-ride="carousel">
         <div class="carousel-inner">
             <div class="carousel-item active item">
@@ -76,10 +89,15 @@
         </div>
     </div>
 
+    <!-- 검색 쿼리 히든 필드 -->
     <input type="hidden" name="searchQuery" th:value="${itemSearchDto.searchQuery}">
+
+    <!-- 검색 결과 표시 -->
     <div th:if="${not #strings.isEmpty(itemSearchDto.searchQuery)}" class="center">
         <p class="h3 font-weight-bold" th:text="${itemSearchDto.searchQuery} + ' 검색결과'"></p>
     </div>
+
+    <!-- 상품 목록 표시 -->
     <div class="container text-center">
         <div class="row row-cols-5">
             <th:block th:each="item, status: ${items.getContent()}">
@@ -99,6 +117,8 @@
             </th:block>
         </div>
     </div>
+
+    <!-- 페이지 네이션 설정 -->
     <div th:with="start=${(items.number/maxPage)*maxPage +1},
         end=(${(items.totalPages == 0) ? 1 : (start + (maxPage-1) < items.totalPages ?
         start + (maxPage - 1) : items.totalPages)})">

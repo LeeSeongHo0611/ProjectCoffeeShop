@@ -88,9 +88,9 @@ function addCart() {
         },
         error: function(jqXHR, status, error) {
             if(jqXHR.status == 401) {
-                alert("로그인이 필요합니다.");
+                alert("로그인 후 이용해주세요");
             } else {
-                alert("장바구니 처리 중 오류가 발생하였습니다.");
+                alert(jqXHR.responseText);
             }
         }
     });
