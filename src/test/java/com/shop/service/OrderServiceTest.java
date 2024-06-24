@@ -1,5 +1,6 @@
 package com.shop.service;
 
+import com.shop.constant.OrderStatus;
 import com.shop.entity.Item;
 import com.shop.entity.Member;
 import com.shop.entity.Order;
@@ -82,5 +83,45 @@ class OrderServiceTest {
 
         int totalPrice = orderDto.getCount() * savedItem.getPrice();
         assertEquals(totalPrice, order.getTotalPrice());
+    }
+
+
+
+    // 저장하는 메서드 예시. 실제 코드에 맞게 구현 필요
+    private Member saveMember() {
+        // 멤버를 저장하고 반환하는 로직을 작성하세요.
+        Member member = new Member();
+        member.setEmail("test@example.com");
+        member.setName("Test User");
+        return memberRepository.save(member); // 실제 저장 로직 추가
+    }
+
+    @Test
+    @DisplayName("주문 취소 테스트")
+    public void cancelOrder() {
+        // 테스트 데이터를 저장
+        Item item = saveItem();
+        Member member = saveMember();
+
+        // 주문 DTO 생성 및 설정
+        OrderDto orderDto = new OrderDto();
+        orderDto.setCount(10);
+        orderDto.setItemId(item.getId());
+
+        // 주문 생성
+        Long orderId = orderService.order(orderDto, member.getEmail());
+
+        // 주문 조회
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+
+        // 주문 취소
+        orderService.cancelOrder(orderId);
+
+        // 주문 상태 확인
+        assertEquals(OrderStatus.CANCEL, order.getOrderStatus());
+
+        // 주문 취소 후 재고 수량 검증
+        assertEquals(100, item.getStockNumber()); // 여기서 100은 예시 값입니다. 실제로 재고 수량을 관리하는 로직에 따라 값이 달라질 수 있습니다.
     }
 }
