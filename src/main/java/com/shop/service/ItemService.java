@@ -89,4 +89,14 @@ public class ItemService {
         return itemRepository.getMainItemPage(itemSearchDto, pageable);
     }
 
+    // 새로운 메서드 추가
+    @Transactional(readOnly = true)
+    public Page<Item> getItems(String searchQuery, Pageable pageable) {
+        if (searchQuery == null || searchQuery.isEmpty()) {
+            return itemRepository.findAll(pageable);
+        } else {
+            return itemRepository.findByItemNmContaining(searchQuery, pageable);
+        }
+    }
+
 }

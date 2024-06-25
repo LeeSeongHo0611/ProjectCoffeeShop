@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,11 +28,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ItemController {
     private final ItemService itemService;
+
     @GetMapping(value = "/admin/item/new")
     public String itemForm(Model model){
-        model.addAttribute("itemFormDto",new ItemFormDto());
+        model.addAttribute("itemFormDto", new ItemFormDto());
         return "item/itemForm";
     }
+
     @PostMapping(value = "/admin/item/new")
     public String itemNew(@Valid ItemFormDto itemFormDto, BindingResult bindingResult, Model model,
                           @RequestParam("itemImgFile") List<MultipartFile> itemImgFileList){
@@ -38,38 +42,34 @@ public class ItemController {
             return "item/itemForm";
         }
         if(itemImgFileList.get(0).isEmpty() && itemFormDto.getId() == null){
-            model.addAttribute("errorMessage",
-                    "첫번째 상품 이미지는 필수 입력 값입니다.");
+            model.addAttribute("errorMessage", "첫번째 상품 이미지는 필수 입력 값입니다.");
             return "item/itemForm";
         }
         try {
             itemService.saveItem(itemFormDto, itemImgFileList);
-        }catch (Exception e){
-            model.addAttribute("errorMessage",
-                    "상품 등록 중 에러가 발생하였습니다.");
+        } catch (Exception e){
+            model.addAttribute("errorMessage", "상품 등록 중 에러가 발생하였습니다.");
             return "item/itemForm";
         }
         return "redirect:/";
     }
 
     @GetMapping(value = "/admin/item/{itemId}")
-    public String itemDtl(@PathVariable("itemId")Long itemId, Model model){
+    public String itemDtl(@PathVariable("itemId") Long itemId, Model model){
         try {
             ItemFormDto itemFormDto = itemService.getItemDtl(itemId);
             model.addAttribute("itemFormDto", itemFormDto);
-        }catch (EntityNotFoundException e){
-            model.addAttribute("errorMessage","존재하지 않는 상품입니다.");
-            model.addAttribute("itemFormDto",new ItemFormDto());
+        } catch (EntityNotFoundException e){
+            model.addAttribute("errorMessage", "존재하지 않는 상품입니다.");
+            model.addAttribute("itemFormDto", new ItemFormDto());
             return "item/itemForm";
         }
-
         return "item/itemForm";
     }
 
     @PostMapping(value = "/admin/item/{itemId}")
     public String itemUpdate(@Valid ItemFormDto itemFormDto, BindingResult bindingResult,
-                             @RequestParam("itemImgFile") List<MultipartFile> itemImgFileList,
-                             Model model){
+                             @RequestParam("itemImgFile") List<MultipartFile> itemImgFileList, Model model){
         if(bindingResult.hasErrors()){
             return "item/itemForm";
         }
@@ -79,28 +79,20 @@ public class ItemController {
         }
         try {
             itemService.updateItem(itemFormDto, itemImgFileList);
-        }catch (Exception e){
+        } catch (Exception e){
             model.addAttribute("errorMessage", "상품 수정 중 에러가 발생하였습니다.");
             return "item/itemForm";
         }
         return "redirect:/"; // 다시 실행 /
     }
 
-    //value 2개인 이유
-    //1. 네비게이션에서 상품관리 클릭하면 나오는거
-    //2. 상품관리안에서 페이지 이동할 때 받는거
     @GetMapping(value = {"/admin/items", "/admin/items/{page}"})
-    public String itemManage(ItemSearchDto itemSearchDto, @PathVariable("page") Optional<Integer> page,
-                             Model model){
-        // page.isPresent() -> page 값 있어?
-        // 어 값 있어 page.get()  아니 값 없어 0
-        // 페이지당 사이즈 5 -> 5개만나옵니다. 6개 되면 페이지 바뀌죠
+    public String itemManage(ItemSearchDto itemSearchDto, @PathVariable("page") Optional<Integer> page, Model model){
         Pageable pageable = PageRequest.of(page.isPresent() ? page.get() : 0, 5);
-
         Page<Item> items = itemService.getAdminItemPage(itemSearchDto, pageable);
         model.addAttribute("items", items);
-        model.addAttribute("itemSearchDto",itemSearchDto);
-        model.addAttribute("maxPage",5);
+        model.addAttribute("itemSearchDto", itemSearchDto);
+        model.addAttribute("maxPage", 5);
         return "item/itemMng";
     }
 
@@ -109,5 +101,17 @@ public class ItemController {
         ItemFormDto itemFormDto = itemService.getItemDtl(itemId);
         model.addAttribute("item", itemFormDto);
         return "item/itemDtl";
+    }
+
+    // AJAX를 위한 엔드포인트 추가 -> Html랜더링
+    @GetMapping("/items")
+    @ResponseBody
+    public ModelAndView getItems(@RequestParam(value = "searchQuery", required = false) String searchQuery,
+                                 @RequestParam(value = "page", required = false, defaultValue = "0") int page, Model model) {
+        System.out.println("Ajax GetMapping -> /items");
+        Pageable pageable = PageRequest.of(page, 2);
+        Page<Item> items = itemService.getItems(searchQuery, pageable);
+        model.addAttribute("items", items);
+        return new ModelAndView("fragments/itemList :: itemList");
     }
 }

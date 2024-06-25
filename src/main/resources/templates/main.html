@@ -2,59 +2,60 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/layout1}">
-<!-- Thymeleaf와 레이아웃 네임스페이스 선언 -->
-
-<!-- 사용자 CSS 추가 -->
-<!-- 사용자 정의 CSS를 추가하는 블록 -->
-<th:block layout:fragment="css">
-    <style>
-        /* 캐러셀 아이템 높이 설정 */
-        .carousel-inner > .item {
-            height: 350px;
-        }
-        /* 여백 설정 */
-        .margin {
-            margin-bottom: 30px;
-        }
-        /* 배너 설정 */
-        .banner {
-            height: 300px;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        /* 카드 텍스트 설정 */
-        .card-text {
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-        /* 링크에 마우스를 올렸을 때 밑줄 제거 */
-        a:hover {
-            text-decoration: none;
-        }
-        /* 텍스트 가운데 정렬 */
-        .center {
-            text-align: center;
-        }
-        /* 커스텀 네비게이션 바 설정 (스타벅스 녹색) */
-        .navbar-custom {
-            background-color: #00704A;
-        }
-        /* 네비게이션 바 브랜드 및 링크 색상 설정 */
-        .navbar-custom .navbar-brand,
-        .navbar-custom .nav-link {
-            color: white;
-        }
-        /* 네비게이션 바 링크에 마우스를 올렸을 때 색상 변경 (황금색 강조 효과) */
-        .navbar-custom .nav-link:hover {
-            color: #FFD700;
-        }
-    </style>
-</th:block>
-
+<head>
+    <meta charset="UTF-8">
+    <title>Main Page</title>
+    <!-- 사용자 CSS 추가 -->
+    <th:block layout:fragment="css">
+        <style>
+            /* 캐러셀 아이템 높이 설정 */
+            .carousel-inner > .item {
+                height: 350px;
+            }
+            /* 여백 설정 */
+            .margin {
+                margin-bottom: 30px;
+            }
+            /* 배너 설정 */
+            .banner {
+                height: 300px;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+            /* 카드 텍스트 설정 */
+            .card-text {
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+            /* 링크에 마우스를 올렸을 때 밑줄 제거 */
+            a:hover {
+                text-decoration: none;
+            }
+            /* 텍스트 가운데 정렬 */
+            .center {
+                text-align: center;
+            }
+            /* 커스텀 네비게이션 바 설정 (스타벅스 녹색) */
+            .navbar-custom {
+                background-color: #00704A;
+            }
+            /* 네비게이션 바 브랜드 및 링크 색상 설정 */
+            .navbar-custom .navbar-brand,
+            .navbar-custom .nav-link {
+                color: white;
+            }
+            /* 네비게이션 바 링크에 마우스를 올렸을 때 색상 변경 (황금색 강조 효과) */
+            .navbar-custom .nav-link:hover {
+                color: #FFD700;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
 <!-- 네비게이션 바 추가 -->
 <nav class="navbar navbar-expand-lg navbar-custom">
     <a class="navbar-brand" href="/">Shop</a>
@@ -78,7 +79,6 @@
 
 <!-- 메인 콘텐츠 영역 -->
 <div layout:fragment="content">
-
     <!-- 캐러셀 (이미지 슬라이드 쇼) 설정 -->
     <div id="carouselControls" class="carousel slide margin" data-ride="carousel">
         <div class="carousel-inner">
@@ -99,7 +99,7 @@
 
     <!-- 상품 목록 표시 -->
     <div class="container text-center">
-        <div class="row row-cols-5">
+        <div class="row row-cols-5" id="itemContainer">
             <th:block th:each="item, status: ${items.getContent()}">
                 <div class="col">
                     <div class="card">
@@ -118,28 +118,84 @@
         </div>
     </div>
 
-    <!-- 페이지 네이션 설정 -->
-    <div th:with="start=${(items.number/maxPage)*maxPage +1},
-        end=(${(items.totalPages == 0) ? 1 : (start + (maxPage-1) < items.totalPages ?
-        start + (maxPage - 1) : items.totalPages)})">
-        <ul class="pagination justify-content-center">
-            <li class="page-item" th:classappend="${items.number eq 0}?'disabled'">
-                <a th:href="@{'/' + '?searchQuery=' + ${itemSearchDto.searchQuery} + '&page=' + ${items.number-1}}"
-                   aria-label='Previous' class="page-link">
-                    <span aria-hidden="true">Previous</span>
-                </a>
-            </li>
-            <li class="page-item" th:each="page: ${#numbers.sequence(start,end)}"
-                th:classappend="${items.number eq page-1}?'active':''">
-                <a th:href="@{'/' + '?searchQuery=' + ${itemSearchDto.searchQuery} + '&page=' +${page -1}}"
-                   th:inline="text" class="page-link">[[${page}]]</a>
-            </li>
-            <li class="page-item" th:classappend="${items.number+1 ge items.totalPages}?'disabled'">
-                <a th:href="@{'/' + '?searchQuery=' + ${itemSearchDto.searchQuery} + '&page=' + ${items.number + 1}}"
-                   aria-label="Next" class="page-link">
-                    <span aria-hidden="true">Next</span>
-                </a>
-            </li>
-        </ul>
+    <!-- 무한 스크롤을 위한 로딩 스피너 -->
+    <div id="loadingSpinner" class="text-center" style="display:none;">
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
     </div>
 </div>
+
+<!-- JQuery 및 부트스트랩 추가 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+
+<!-- JavaScript 변수 선언 -->
+<script th:inline="javascript">
+    var totPage = /*[[${totPage}]]*/ '0'; //토탈 페이지
+    var searchQuery = /*[[${itemSearchDto.searchQuery}]]*/ '';
+</script>
+
+<!-- AJAX 및 무한 스크롤 JavaScript -->
+<script th:inline="javascript">
+    var curPage = 1; // 페이지 초기값
+    var isLoading = false; // 현재 페이지가 로딩 중인지 여부
+
+    $(window).on('scroll', function() {
+        console.log('Scroll event triggered'); // 스크롤 이벤트가 발생할 때 로그
+        var scrollTop = $(window).scrollTop(); // 위로 스크롤된 길이
+        var windowHeight = $(window).height(); // 웹 브라우저의 창의 높이
+        var documentHeight = $(document).height(); // 문서 전체의 높이
+        var isBottom = scrollTop + windowHeight + 10 >= documentHeight; // 바닥에 갔는지 여부
+
+        console.log('scrollTop:', scrollTop, 'windowHeight:', windowHeight, 'documentHeight:', documentHeight); // 변수 값 로그
+        console.log('isBottom:', isBottom); // 변수 값 로그
+
+        if (isBottom) {
+            console.log('Bottom reached'); // 바닥에 도달했을 때 로그
+            // 만약 현재 마지막 페이지라면
+            if (curPage >= totPage) {
+                console.log('No more pages to load'); // 더 이상 로드할 페이지가 없을 때 로그
+                return false; // 함수 종료
+            } else {
+                if (!isLoading) {
+                    console.log('Loading more items'); // 새로운 아이템을 로드할 때 로그
+                    isLoading = true; // 로딩 상태를 true로 변경
+                    $('#loadingSpinner').show(); // 로딩 스피너 표시
+                    curPage++; // 현재 페이지 1 증가
+                    getList(curPage); // 추가로 받을 리스트 ajax 처리
+                }
+            }
+        }
+    });
+
+    // 리스트 불러오기 함수
+    function getList(curPage) {
+        console.log('Fetching page:', curPage); // 페이지를 가져올 때 로그
+        $.ajax({
+            type: 'GET',
+            url: '/items', // 상대 경로로 변경
+            data: {
+                searchQuery: searchQuery,
+                page: curPage
+            },
+            success: function(data) {
+                console.log('AJAX 응답 데이터:', data); // 응답 데이터 로그
+                const parser = new DOMParser();
+                const htmlDoc = parser.parseFromString(data, 'text/html');
+                const newItems = htmlDoc.querySelectorAll('.col');
+                console.log('파싱된 새 아이템:', newItems); // 파싱된 아이템 로그
+                newItems.forEach(item => $('#itemContainer').append(item));
+                $('#loadingSpinner').hide(); // 로딩 스피너 숨기기
+                isLoading = false; // 로딩 여부를 false로 변경
+            },
+            error: function() {
+                console.error('Failed to load more items'); // 에러 로그
+                $('#loadingSpinner').hide(); // 로딩 스피너 숨기기
+                isLoading = false; // 로딩 여부를 false로 변경
+            }
+        });
+    }
+</script>
+</body>
+</html>

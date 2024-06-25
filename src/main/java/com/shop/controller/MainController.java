@@ -19,13 +19,16 @@ public class MainController {
     private final ItemService itemService;
     @GetMapping(value = "/")
     public String main(ItemSearchDto itemSearchDto, Optional<Integer> page, Model model) {
-        Pageable pageable = PageRequest.of(page.isPresent() ? page.get() : 0, 5);
+        // page 사이즈 2로 줄임 -> ajax 통신 테스트
+        Pageable pageable = PageRequest.of(page.isPresent() ? page.get() : 0, 2);
         Page<MainItemDto> items = itemService.getMainItemPage(itemSearchDto, pageable);
         System.out.println(items.getNumber()+"!!!!!!!!!!");
         System.out.println(items.getTotalPages()+"#########");
         model.addAttribute("items", items);
         model.addAttribute("itemSearchDto",itemSearchDto);
         model.addAttribute("maxPage",5);
+        System.out.println("totPage -> :"+items.getTotalPages());
+        model.addAttribute("totPage", items.getTotalPages()); // 전체 페이지 수 추가
         return "main";
     }
 }
